@@ -1,6 +1,5 @@
-
 import { z } from 'zod';
-import { insertProductSchema, insertMessageSchema, products, messages } from './schema';
+import { insertProductSchema, insertMessageSchema, productSchema, messageSchema } from './schema';
 
 export const api = {
   products: {
@@ -8,7 +7,7 @@ export const api = {
       method: 'GET' as const,
       path: '/api/products',
       responses: {
-        200: z.array(z.custom<typeof products.$inferSelect>()),
+        200: z.array(productSchema),
       },
     },
     create: {
@@ -16,7 +15,7 @@ export const api = {
       path: '/api/products',
       input: insertProductSchema,
       responses: {
-        201: z.custom<typeof products.$inferSelect>(),
+        201: productSchema,
       },
     },
     update: {
@@ -24,7 +23,7 @@ export const api = {
       path: '/api/products/:id',
       input: insertProductSchema.partial(),
       responses: {
-        200: z.custom<typeof products.$inferSelect>(),
+        200: productSchema,
         404: z.object({ message: z.string() }),
       },
     },
@@ -42,7 +41,7 @@ export const api = {
       method: 'GET' as const,
       path: '/api/messages',
       responses: {
-        200: z.array(z.custom<typeof messages.$inferSelect>()),
+        200: z.array(messageSchema),
       },
     },
     create: {
@@ -50,7 +49,7 @@ export const api = {
       path: '/api/messages',
       input: insertMessageSchema,
       responses: {
-        201: z.custom<typeof messages.$inferSelect>(),
+        201: messageSchema,
       },
     },
   },

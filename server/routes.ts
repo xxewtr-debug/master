@@ -50,11 +50,11 @@ const SESSION_TTL = 24 * 60 * 60 * 1000;
 
 function cleanExpiredSessions() {
   const now = Date.now();
-  for (const [token, session] of adminSessions) {
+  adminSessions.forEach((session, token) => {
     if (now - session.createdAt > SESSION_TTL) {
       adminSessions.delete(token);
     }
-  }
+  });
 }
 
 async function requireAdmin(req: Request, res: Response, next: NextFunction) {
@@ -114,7 +114,7 @@ export async function registerRoutes(
   });
 
   app.get('/api/products/:id', async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
     const product = await storage.getProduct(id);
     if (!product) {
       return res.status(404).json({ message: 'المنتج غير موجود' });
@@ -129,7 +129,7 @@ export async function registerRoutes(
   });
 
   app.put('/api/products/:id', requireAdmin, async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id as string;
     const input = api.products.update.input.parse(req.body);
     const product = await storage.updateProduct(id, input);
     if (!product) {
@@ -139,7 +139,7 @@ export async function registerRoutes(
   });
 
   app.delete(api.products.delete.path, requireAdmin, async (req, res) => {
-    await storage.deleteProduct(Number(req.params.id));
+    await storage.deleteProduct(req.params.id as string);
     res.status(204).end();
   });
 
@@ -195,17 +195,17 @@ export async function registerRoutes(
   });
 
   app.delete('/api/admin/codes/:id', requireAdmin, requireMaster, async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id as string;
     const codes = await storage.getAdminCodes();
     const codeToDelete = codes.find(c => c.id === id);
     if (!codeToDelete) return res.status(404).json({ error: 'الرمز غير موجود' });
     if (codeToDelete.isMaster) return res.status(403).json({ error: 'لا يمكن حذف الرمز الرئيسي' });
     await storage.deleteAdminCode(id);
-    for (const [token, session] of adminSessions) {
+    adminSessions.forEach((session, token) => {
       if (session.code === codeToDelete.code) {
         adminSessions.delete(token);
       }
-    }
+    });
     res.status(204).end();
   });
 

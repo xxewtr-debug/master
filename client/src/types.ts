@@ -1,5 +1,5 @@
 export interface Product {
-    id: number;
+    id: string;
     name: string;
     category: 'men' | 'women' | 'kids' | 'sports';
     price: number;
@@ -19,7 +19,7 @@ export interface CartItem extends Product {
 export type Page = 'home' | 'products' | 'about' | 'contact' | 'product-details' | 'admin';
 
 export interface ToastMessage {
-    id: number;
+    id: string;
     text: string;
     type: 'success' | 'error' | 'info';
 }

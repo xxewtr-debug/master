@@ -1,43 +1,40 @@
-
-import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const products = pgTable("products", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  category: text("category").notNull(),
-  price: integer("price").notNull(),
-  rating: integer("rating").default(5),
-  image: text("image").notNull(),
-  images: text("images").array(),
-  description: text("description").notNull(),
-  isNew: boolean("is_new").default(false),
-  inStock: boolean("in_stock").default(true),
-  sizes: integer("sizes").array(),
+export const productSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  category: z.string(),
+  price: z.number(),
+  rating: z.number().default(5),
+  image: z.string(),
+  images: z.array(z.string()).nullable().optional(),
+  description: z.string(),
+  isNew: z.boolean().default(false),
+  inStock: z.boolean().default(true),
+  sizes: z.array(z.number()).nullable().optional(),
 });
 
-export const messages = pgTable("messages", {
-  id: serial("id").primaryKey(),
-  content: text("content").notNull(),
-  isSystem: boolean("is_system").default(false),
+export const messageSchema = z.object({
+  id: z.string(),
+  content: z.string(),
+  isSystem: z.boolean().default(false),
 });
 
-export const adminCodes = pgTable("admin_codes", {
-  id: serial("id").primaryKey(),
-  code: text("code").notNull().unique(),
-  label: text("label").notNull(),
-  isMaster: boolean("is_master").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
+export const adminCodeSchema = z.object({
+  id: z.string(),
+  code: z.string(),
+  label: z.string(),
+  isMaster: z.boolean().default(false),
+  createdAt: z.any().optional(),
 });
 
-export const insertProductSchema = createInsertSchema(products).omit({ id: true });
-export const insertMessageSchema = createInsertSchema(messages).omit({ id: true });
-export const insertAdminCodeSchema = createInsertSchema(adminCodes).omit({ id: true, createdAt: true });
+export const insertProductSchema = productSchema.omit({ id: true });
+export const insertMessageSchema = messageSchema.omit({ id: true });
+export const insertAdminCodeSchema = adminCodeSchema.omit({ id: true, createdAt: true });
 
-export type Product = typeof products.$inferSelect;
+export type Product = z.infer<typeof productSchema>;
 export type InsertProduct = z.infer<typeof insertProductSchema>;
-export type Message = typeof messages.$inferSelect;
+export type Message = z.infer<typeof messageSchema>;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
-export type AdminCode = typeof adminCodes.$inferSelect;
+export type AdminCode = z.infer<typeof adminCodeSchema>;
 export type InsertAdminCode = z.infer<typeof insertAdminCodeSchema>;

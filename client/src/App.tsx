@@ -146,12 +146,12 @@ const App: React.FC = () => {
         showToast(`تم إضافة ${product.name} إلى السلة`);
     };
 
-    const removeFromCart = (id: number) => {
+    const removeFromCart = (id: string) => {
         setCart(prev => prev.filter(item => item.id !== id));
     };
 
     const showToast = (text: string, type: 'success' | 'error' | 'info' = 'success') => {
-        const id = Date.now();
+        const id = String(Date.now());
         setToasts(prev => [...prev, { id, text, type }]);
         setTimeout(() => {
             setToasts(prev => prev.filter(t => t.id !== id));
@@ -249,7 +249,7 @@ const App: React.FC = () => {
         }
     };
 
-    const handleDeleteProduct = async (id: number) => {
+    const handleDeleteProduct = async (id: string) => {
         try {
             const headers: Record<string, string> = {};
             if (adminToken) headers['X-Admin-Token'] = adminToken;

@@ -1,72 +1,90 @@
-
-import { db } from "./db";
-import { products, messages, adminCodes, type InsertProduct, type Product, type InsertMessage, type Message, type AdminCode, type InsertAdminCode } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { firestore } from "./firebaseAdmin";
+import type { Product, InsertProduct, Message, InsertMessage, AdminCode, InsertAdminCode } from "@shared/schema";
 
 export interface IStorage {
   getProducts(): Promise<Product[]>;
-  getProduct(id: number): Promise<Product | null>;
+  getProduct(id: string): Promise<Product | null>;
   createProduct(product: InsertProduct): Promise<Product>;
-  updateProduct(id: number, product: Partial<InsertProduct>): Promise<Product | null>;
-  deleteProduct(id: number): Promise<void>;
+  updateProduct(id: string, product: Partial<InsertProduct>): Promise<Product | null>;
+  deleteProduct(id: string): Promise<void>;
   getMessages(): Promise<Message[]>;
   createMessage(message: InsertMessage): Promise<Message>;
   getAdminCodes(): Promise<AdminCode[]>;
   createAdminCode(adminCode: InsertAdminCode): Promise<AdminCode>;
-  deleteAdminCode(id: number): Promise<void>;
+  deleteAdminCode(id: string): Promise<void>;
   validateAdminCode(code: string): Promise<AdminCode | null>;
 }
 
-export class DatabaseStorage implements IStorage {
+export class FirestoreStorage implements IStorage {
+  private productsCol = firestore.collection("products");
+  private messagesCol = firestore.collection("messages");
+  private adminCodesCol = firestore.collection("adminCodes");
+
   async getProducts(): Promise<Product[]> {
-    return await db.select().from(products);
+    const snapshot = await this.productsCol.get();
+    return snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Product));
   }
 
-  async getProduct(id: number): Promise<Product | null> {
-    const [product] = await db.select().from(products).where(eq(products.id, id));
-    return product || null;
+  async getProduct(id: string): Promise<Product | null> {
+    const doc = await this.productsCol.doc(id).get();
+    if (!doc.exists) return null;
+    return { ...doc.data(), id: doc.id } as Product;
   }
 
   async createProduct(insertProduct: InsertProduct): Promise<Product> {
-    const [product] = await db.insert(products).values(insertProduct).returning();
-    return product;
+    const docRef = await this.productsCol.add(insertProduct);
+    const doc = await docRef.get();
+    return { ...doc.data(), id: doc.id } as Product;
   }
 
-  async updateProduct(id: number, updateData: Partial<InsertProduct>): Promise<Product | null> {
-    const [product] = await db.update(products).set(updateData).where(eq(products.id, id)).returning();
-    return product || null;
+  async updateProduct(id: string, updateData: Partial<InsertProduct>): Promise<Product | null> {
+    const docRef = this.productsCol.doc(id);
+    const doc = await docRef.get();
+    if (!doc.exists) return null;
+    await docRef.update(updateData);
+    const updated = await docRef.get();
+    return { ...updated.data(), id: updated.id } as Product;
   }
 
-  async deleteProduct(id: number): Promise<void> {
-    await db.delete(products).where(eq(products.id, id));
+  async deleteProduct(id: string): Promise<void> {
+    await this.productsCol.doc(id).delete();
   }
 
   async getMessages(): Promise<Message[]> {
-    return await db.select().from(messages);
+    const snapshot = await this.messagesCol.get();
+    return snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Message));
   }
 
   async createMessage(insertMessage: InsertMessage): Promise<Message> {
-    const [message] = await db.insert(messages).values(insertMessage).returning();
-    return message;
+    const docRef = await this.messagesCol.add(insertMessage);
+    const doc = await docRef.get();
+    return { ...doc.data(), id: doc.id } as Message;
   }
 
   async getAdminCodes(): Promise<AdminCode[]> {
-    return await db.select().from(adminCodes);
+    const snapshot = await this.adminCodesCol.get();
+    return snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as AdminCode));
   }
 
   async createAdminCode(insertAdminCode: InsertAdminCode): Promise<AdminCode> {
-    const [adminCode] = await db.insert(adminCodes).values(insertAdminCode).returning();
-    return adminCode;
+    const docRef = await this.adminCodesCol.add({
+      ...insertAdminCode,
+      createdAt: new Date().toISOString(),
+    });
+    const doc = await docRef.get();
+    return { ...doc.data(), id: doc.id } as AdminCode;
   }
 
-  async deleteAdminCode(id: number): Promise<void> {
-    await db.delete(adminCodes).where(eq(adminCodes.id, id));
+  async deleteAdminCode(id: string): Promise<void> {
+    await this.adminCodesCol.doc(id).delete();
   }
 
   async validateAdminCode(code: string): Promise<AdminCode | null> {
-    const [adminCode] = await db.select().from(adminCodes).where(eq(adminCodes.code, code));
-    return adminCode || null;
+    const snapshot = await this.adminCodesCol.where("code", "==", code).get();
+    if (snapshot.empty) return null;
+    const doc = snapshot.docs[0];
+    return { ...doc.data(), id: doc.id } as AdminCode;
   }
 }
 
-export const storage = new DatabaseStorage();
+export const storage = new FirestoreStorage();

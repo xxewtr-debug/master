@@ -11,6 +11,20 @@ export default {
         sm: ".1875rem", /* 3px */
       },
       colors: {
+        gold: {
+          200: '#FBF5B7',
+          300: '#E8D48B',
+          400: '#D4AF37',
+          500: '#d4af37',
+          600: '#C69C48',
+          700: '#aa771c',
+          800: '#806921',
+        },
+        navy: {
+          800: '#1e293b',
+          900: '#0f172a',
+          950: '#020617',
+        },
         // Flat / base colors (regular buttons)
         background: "hsl(var(--background) / <alpha-value>)",
         foreground: "hsl(var(--foreground) / <alpha-value>)",
@@ -86,6 +100,8 @@ export default {
         sans: ["var(--font-sans)"],
         serif: ["var(--font-serif)"],
         mono: ["var(--font-mono)"],
+        cairo: ["'Cairo'", "sans-serif"],
+        cinzel: ["'Cinzel'", "serif"],
       },
       keyframes: {
         "accordion-down": {

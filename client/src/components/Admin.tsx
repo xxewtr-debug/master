@@ -10,7 +10,7 @@ import { CATEGORIES } from '../constants';
 import { Logo } from './Logo';
 
 interface AdminCode {
-    id: number;
+    id: string;
     code: string;
     label: string;
     isMaster: boolean;
@@ -21,7 +21,7 @@ interface AdminProps {
     products: Product[];
     onAddProduct: (product: Product) => void;
     onUpdateProduct: (product: Product) => void;
-    onDeleteProduct: (id: number) => void;
+    onDeleteProduct: (id: string) => void;
     onClose: () => void;
     adminToken?: string;
     onTokenChange?: (token: string) => void;
@@ -40,7 +40,7 @@ export const Admin: React.FC<AdminProps> = ({ products, onAddProduct, onUpdatePr
     const [error, setError] = useState('');
     const [loginLoading, setLoginLoading] = useState(false);
     const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute:'2-digit' }));
-    const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
+    const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [editProduct, setEditProduct] = useState<Partial<Product>>({});
@@ -66,8 +66,8 @@ export const Admin: React.FC<AdminProps> = ({ products, onAddProduct, onUpdatePr
     const [addingCode, setAddingCode] = useState(false);
     const [codeError, setCodeError] = useState('');
     const [codeSuccess, setCodeSuccess] = useState('');
-    const [deleteCodeConfirm, setDeleteCodeConfirm] = useState<number | null>(null);
-    const [copiedId, setCopiedId] = useState<number | null>(null);
+    const [deleteCodeConfirm, setDeleteCodeConfirm] = useState<string | null>(null);
+    const [copiedId, setCopiedId] = useState<string | null>(null);
     const [adminToken, setAdminToken] = useState('');
 
     useEffect(() => {
@@ -181,7 +181,7 @@ export const Admin: React.FC<AdminProps> = ({ products, onAddProduct, onUpdatePr
         }
     };
 
-    const handleDeleteCode = async (id: number) => {
+    const handleDeleteCode = async (id: string) => {
         try {
             const res = await fetch(`/api/admin/codes/${id}`, { method: 'DELETE', headers: { 'X-Admin-Token': adminToken } });
             if (checkRevoked(res)) return;
@@ -197,7 +197,7 @@ export const Admin: React.FC<AdminProps> = ({ products, onAddProduct, onUpdatePr
         }
     };
 
-    const copyCode = (code: string, id: number) => {
+    const copyCode = (code: string, id: string) => {
         navigator.clipboard.writeText(code);
         setCopiedId(id);
         setTimeout(() => setCopiedId(null), 2000);
@@ -274,7 +274,7 @@ export const Admin: React.FC<AdminProps> = ({ products, onAddProduct, onUpdatePr
             }
 
             const product: Product = {
-                id: Date.now(), name: newProduct.name!, price: Number(newProduct.price),
+                id: String(Date.now()), name: newProduct.name!, price: Number(newProduct.price),
                 image: url, images: additionalUrls.length > 0 ? additionalUrls : null,
                 category: newProduct.category as any || 'men',
                 description: newProduct.description || 'إصدار حصري بجودة الماستر.',
@@ -1022,7 +1022,7 @@ export const Admin: React.FC<AdminProps> = ({ products, onAddProduct, onUpdatePr
                                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">التصنيف</label>
                                 <div className="grid grid-cols-4 gap-2">
                                     {CATEGORIES.filter(c => c.id !== 'all').map(cat => (
-                                        <button key={cat.id} type="button" onClick={() => setEditProduct({...editProduct, category: cat.id})}
+                                        <button key={cat.id} type="button" onClick={() => setEditProduct({...editProduct, category: cat.id as Product['category']})}
                                             className={`py-2 rounded-lg text-xs font-bold border transition-all ${editProduct.category === cat.id ? 'bg-gold-500 border-gold-500 text-navy-950' : 'bg-[#020617] border-white/5 text-slate-500 hover:border-white/20'}`}>
                                             {cat.label}
                                         </button>
